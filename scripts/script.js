@@ -1,54 +1,71 @@
 let movies = [];
 const API_KEY = "f531333d637d0c44abc85b3e74db2186";
+const MOVIE_API_URL = `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US`;
 
-const movieList = document.getElementsByClassName("movie-container")[0];
-
-async function fetchMovies() {
+// An IIFE (Immediately Invoked Function Expression) function for runs as soon as it is defined.
+(async () => {
   try {
-    const response = await fetch(
-      `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US`
-    );
-    const result = await response.json();
-    movies = result.results;
+    movies = await fetchMovies(MOVIE_API_URL);
     renderMovies(movies);
+  } catch (err) {}
+})();
 
-    console.log("🚀 ~ file: script2.js:13 ~ fetchMovies ~ result:", result);
+//fetch function for fetching movies
+async function fetchMovies(apiUrl) {
+  try {
+    const response = await fetch(apiUrl);
+    const result = await response.json();
+    if (result.results) {
+      return result.results;
+    }
+    throw result.status_message;
   } catch (err) {
-    console.log("🚀 ~ file: script2.js:14 ~ fetchMovies ~ err:", err);
+    alert(err);
   }
 }
-fetchMovies();
 
+//renderMovies function for render the ui of movie
 const renderMovies = (movies) => {
+  const movieList = document.getElementsByClassName("movie-container")[0];
   movieList.innerHTML = "";
-  movies.map((movie) => {
+  movies?.forEach((movie) => {
     const { poster_path, title, vote_count, vote_average } = movie;
-    let divItem = document.createElement("div");
-    divItem.className = "movie-box";
-    let imgSrc = poster_path
-      ? `https://image.tmdb.org/t/p/original/${poster_path}`
-      : "https://w7.pngwing.com/pngs/116/765/png-transparent-clapperboard-computer-icons-film-movie-poster-angle-text-logo-thumbnail.png";
+    const movieHTML = renderMovieHTML(
+      poster_path,
+      title,
+      vote_count,
+      vote_average
+    );
 
-    divItem.innerHTML += `
-    <img
-    src=${imgSrc}
-  />
-  <div class="movie-details px-2 py-1 my-2">
-    <h5 class="text-center movie-title my-2">${title}</h5>
-    <div class="votes-likes d-flex justify-content-between">
-      <div>
-        <p class="vote-count">Vote: ${vote_count}</p>
-        <p class="rating-count">Rating: ${vote_average}</p>
-      </div>
-      <span>❤️</span>
-    </div>
-    <button type="button" class="btn w-100 btn-outline-danger">
-      Watch Now
-    </button>
-  </div>
-    `;
+    const divItem = document.createElement("div");
+    divItem.className = "movie-box";
+    divItem.innerHTML = movieHTML;
+
     movieList.appendChild(divItem);
   });
+};
+//renderMovieHTML function is for html render
+const renderMovieHTML = (posterPath, title, voteCount, voteAverage) => {
+  const imgSrc = posterPath
+    ? `https://image.tmdb.org/t/p/original/${posterPath}`
+    : "./assets/images/default-img.png";
+
+  return `
+    <img src="${imgSrc}" />
+    <div class="movie-details px-2 py-1 my-2">
+      <h5 class="text-center movie-title my-2">${title}</h5>
+      <div class="votes-likes d-flex justify-content-between">
+        <div>
+          <p class="vote-count">Vote: ${voteCount}</p>
+          <p class="rating-count">Rating: ${voteAverage}</p>
+        </div>
+        <span>❤️</span>
+      </div>
+      <button type="button" class="btn w-100 btn-outline-danger">
+        Watch Now
+      </button>
+    </div>
+  `;
 };
 
 //sort by date
@@ -103,19 +120,10 @@ const searchInput = document.getElementById("search-input");
 
 searchBtn.addEventListener("click", () => {
   searchMovies(searchInput.value);
-  // pagnination.style.display="none"
 });
-
+// fetch data by name function
 const searchMovies = async (searchedMovie) => {
-  try {
-    const response = await fetch(
-      `https://api.themoviedb.org/3/search/movie?query=${searchedMovie}&api_key=${API_KEY}&include_adult=false&language=en-US&page=1`
-    );
-    const result = await response.json();
-    console.log("🚀 ~ file: script2.js:115 ~ searchMovies ~ result:", result);
-    movies = result.results;
-    renderMovies(movies);
-  } catch (err) {
-    console.log("🚀 ~ file: script2.js:114 ~ searchMovies ~ err:", err);
-  }
+  const SEARCH_MOVIE_API_URL = `https://api.themoviedb.org/3/search/movie?query=${searchedMovie}&api_key=${API_KEY}&include_adult=false&language=en-US&page=1`;
+  const movies = await fetchMovies(SEARCH_MOVIE_API_URL);
+  renderMovies(movies);
 };
