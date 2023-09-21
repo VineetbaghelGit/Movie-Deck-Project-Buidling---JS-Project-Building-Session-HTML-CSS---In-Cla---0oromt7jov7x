@@ -1,7 +1,9 @@
 let movies = [];
 const API_KEY = "f531333d637d0c44abc85b3e74db2186";
 const MOVIE_API_URL = `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US`;
+const movieList = document.getElementsByClassName("movie-container")[0];
 
+const STORAGE_KEY_NAME = "favourite-movies";
 // An IIFE (Immediately Invoked Function Expression) function for runs as soon as it is defined.
 (async () => {
   try {
@@ -24,28 +26,73 @@ async function fetchMovies(apiUrl) {
   }
 }
 
+//custom function for getting data from local storage
+const getLocalStorageVal = () => {
+  const favMovies = JSON.parse(localStorage.getItem(STORAGE_KEY_NAME));
+  return favMovies === null ? [] : favMovies;
+};
+
+//remove movie from favourite list in local storage
+const removeAsFavouriteMovie = (favMovieDetails) => {
+  const favMoviesNames = getLocalStorageVal();
+  let filteredFavMovies = favMoviesNames.filter(
+    (movie) => movie.id !== favMovieDetails.id
+  );
+  localStorage.setItem(STORAGE_KEY_NAME, JSON.stringify(filteredFavMovies));
+  renderMovies(filteredFavMovies);
+};
+
+//add movie from favourite list in local storage
+
+const addAsFavouriteMovie = (favMovieDetails) => {
+  const favMoviesNames = getLocalStorageVal();
+  localStorage.setItem(
+    STORAGE_KEY_NAME,
+    JSON.stringify([...favMoviesNames, favMovieDetails])
+  );
+};
+
 //renderMovies function for render the ui of movie
 const renderMovies = (movies) => {
-  const movieList = document.getElementsByClassName("movie-container")[0];
+  const favMoviesNames = getLocalStorageVal();
   movieList.innerHTML = "";
   movies?.forEach((movie) => {
-    const { poster_path, title, vote_count, vote_average } = movie;
+    const { poster_path, title, vote_count, vote_average, id } = movie;
     const movieHTML = renderMovieHTML(
       poster_path,
       title,
       vote_count,
-      vote_average
+      vote_average,
+      id,
+      favMoviesNames
     );
 
     const divItem = document.createElement("div");
     divItem.className = "movie-box";
     divItem.innerHTML = movieHTML;
-
+    const favouriteIcon = divItem.querySelector(".favourite-icon");
+    favouriteIcon.addEventListener("click", (event) => {
+      if (favouriteIcon.classList.contains("fa-solid")) {
+        removeAsFavouriteMovie(movie);
+        favouriteIcon.classList.remove("fa-solid");
+      } else {
+        addAsFavouriteMovie(movie);
+        favouriteIcon.classList.add("fa-solid");
+      }
+    });
     movieList.appendChild(divItem);
   });
 };
 //renderMovieHTML function is for html render
-const renderMovieHTML = (posterPath, title, voteCount, voteAverage) => {
+const renderMovieHTML = (
+  posterPath,
+  title,
+  voteCount,
+  voteAverage,
+  id,
+  favMoviesNames
+) => {
+  const isIdIncluded = favMoviesNames.some((movie) => movie.id === id);
   const imgSrc = posterPath
     ? `https://image.tmdb.org/t/p/original/${posterPath}`
     : "./assets/images/default-img.png";
@@ -59,7 +106,11 @@ const renderMovieHTML = (posterPath, title, voteCount, voteAverage) => {
           <p class="vote-count">Vote: ${voteCount}</p>
           <p class="rating-count">Rating: ${voteAverage}</p>
         </div>
-        <span>❤️</span>
+        <span>
+        <i class="favourite-icon ${
+          isIdIncluded ? "fa-solid" : null
+        } fa-regular fa-heart fa-1xl" id="${id}"></i>
+        </span>
       </div>
       <button type="button" class="btn w-100 btn-outline-danger">
         Watch Now
@@ -127,3 +178,28 @@ const searchMovies = async (searchedMovie) => {
   const movies = await fetchMovies(SEARCH_MOVIE_API_URL);
   renderMovies(movies);
 };
+
+//tab functionality
+const allTab = document.getElementById("tab1");
+const favTab = document.getElementById("tab2");
+
+allTab.addEventListener("click", changeTab);
+favTab.addEventListener("click", changeTab);
+
+//onclick function for both tabs
+function changeTab(e) {
+  allTab.classList.remove("btn-primary");
+  favTab.classList.remove("btn-primary");
+  e.target.classList.add("btn-primary");
+  showMoviesList();
+}
+
+//get the list of movies after changing tab
+function showMoviesList() {
+  if (allTab.classList.contains("btn-primary")) {
+    renderMovies(movies);
+  } else if (favTab.classList.contains("btn-primary")) {
+    const favMoviesNames = getLocalStorageVal();
+    renderMovies(favMoviesNames);
+  }
+}

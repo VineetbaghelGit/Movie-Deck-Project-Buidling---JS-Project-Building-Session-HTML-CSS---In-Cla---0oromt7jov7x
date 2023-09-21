@@ -60,6 +60,15 @@ body {
 .rating-count {
   margin: 10px 0px;
 }
+#favourite-icon {
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+.fa-solid {
+  color: red;
+}
 @media (max-width: 767px) {
   .btn {
     margin-top: 15px;
