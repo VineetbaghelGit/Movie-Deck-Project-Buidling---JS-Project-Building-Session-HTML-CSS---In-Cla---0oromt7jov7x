@@ -19,5 +19,5 @@ This is a movie list application that fetches data from a movie API and it allow
 
 ## Demo
 
-[Movie Deck Web](https://www.youtube.com/)
+[Movie Deck Web](https://vineetbaghelgit.github.io/Movie-Deck-Project-Buidling---JS-Project-Building-Session-HTML-CSS---In-Cla---0oromt7jov7x/)
 
